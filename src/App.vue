@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import { useUserStore } from "@/stores/user"
-const userStore = useUserStore()
+import { useAlertsStore } from "@/stores/user"
+const alertsStore = useAlertsStore()
 // 项目初始化读取 localStorage，恢复登录状态
-userStore.loadUser()
+alertsStore.loadUser()
 </script>
 
 <template>

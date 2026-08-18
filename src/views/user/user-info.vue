@@ -4,19 +4,19 @@
       <h2>👤 用户个人信息</h2>
       <div class="item">
         <span class="label">用户ID：</span>
-        <span class="value">{{ loginUser.id }}</span>
+        <span class="value">{{userInfo?.data?.id }}</span>
       </div>
       <div class="item">
         <span class="label">用户名：</span>
-        <span class="value">{{ alertsStore.name }}</span>
+        <span class="value">{{ userInfo?.data?.name ?? "未填写" }}</span>
       </div>
       <div class="item">
-        <span class="label">年龄：</span>
-        <span class="value">{{ loginUser.age ?? "未填写" }}</span>
+        <span class="label">性别：</span>
+        <span class="value">{{ alertsStore.userInfo?.data?.age ?? "未填写" }}</span>
       </div>
       <div class="item">
         <span class="label">邮箱：</span>
-        <span class="value">{{ loginUser.email ?? "未填写" }}</span>
+        <span class="value">{{ alertsStore.userInfo?.data?.email ?? "未填写"  }}</span>
       </div>
 
       <div class="btn-group">
@@ -29,13 +29,18 @@
 
 <script setup lang="ts">
 import { useRouter } from "vue-router"
-import { useAlertsStore } from "@/stores/user"
+import { useAlertsStore } from "../../stores/user"
 import { storeToRefs } from "pinia"
+
+// 调试：打印看有没有值
+
 
 const router = useRouter()
 const alertsStore = useAlertsStore()
-const { loginUser } = storeToRefs(alertsStore)
+const { userInfo } = storeToRefs(alertsStore)
 
+//const { loginUser } = storeToRefs(alertsStore)
+console.log('userInfo', userInfo.value)
 const goBack = () => {
   router.push("/login")
 }

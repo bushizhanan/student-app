@@ -48,7 +48,7 @@ async function register() {
     email: email.value
   }
   try{
-    const response = await axios.post('http://localhost:8080/api/register', params)
+    const response = await axios.post('http://localhost:9090/api/register', params)
     console.log(response.data)
     //清空全部输入框
     username.value = ''

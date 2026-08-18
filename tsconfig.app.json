@@ -5,7 +5,11 @@
     "types": ["vite/client"],
     "allowArbitraryExtensions": true,
 
-    /* Linting */
+    // 删除 baseUrl，paths的值前面加上 ./
+    "paths": {
+      "@/*": ["./src/*"]
+    },
+
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "erasableSyntaxOnly": true,

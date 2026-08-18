@@ -17,10 +17,29 @@ const router = createRouter({
       meta:{title:'用户注册'}
     },
     {
-    path:'/userinfo',
-    component: ()=> import('../views/user/user-info.vue'),
-    meta:{title:'进入首页'}
-  }
+    path:'/index',
+    component: ()=> import('../views/index/index.vue'),
+    meta:{title:'进入首页'},
+    
+    children:[
+      {
+        path:'',   // path为空字符串，代表父路由访问时默认渲染这个组件
+        component:()=>import('../views/index/home.vue'),
+        meta:{title:'首页'}
+      },
+      {
+        path:'home',
+        component:()=>import('../views/index/home.vue'),
+        meta:{title:'首页'}
+      },
+      {
+        path:'gongneng',
+        component:()=>import('../views/index/gongneng.vue'),
+        meta:{title:'功能'}
+      },
+    ]
+    }
+  ,
 
   ]
 })
