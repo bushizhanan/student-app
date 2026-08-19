@@ -33,9 +33,24 @@ const router = createRouter({
         meta:{title:'首页'}
       },
       {
-        path:'gongneng',
-        component:()=>import('../views/index/gongneng.vue'),
-        meta:{title:'功能'}
+        path:'student',
+        component:()=>import('../views/index/student.vue'),
+        meta:{title:'学生管理'}
+      },
+      {
+        path:'class',
+        component:()=>import('../views/index/class.vue'),
+        meta:{title:'班级管理'}
+      },
+      {
+        path:'score',
+        component:()=>import('../views/index/score.vue'),
+        meta:{title:'成绩管理'}
+      },
+      {
+        path:'user',
+        component:()=>import('../views/index/user.vue'),
+        meta:{title:'用户设置'}
       },
     ]
     }
