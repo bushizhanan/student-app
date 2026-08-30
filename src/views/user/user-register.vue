@@ -30,7 +30,7 @@
 
 <script setup lang="ts">
 import { ref } from 'vue'
-import axios from 'axios';
+import request from '@/api/request'
 import { useRouter } from 'vue-router'
 const router = useRouter()
 
@@ -48,7 +48,8 @@ async function register() {
     email: email.value
   }
   try{
-    const response = await axios.post('http://localhost:9090/api/register', params)
+    const response = await request.post('/api/register', params)
+
     console.log(response.data)
     //清空全部输入框
     username.value = ''

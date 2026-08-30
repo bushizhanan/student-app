@@ -5,38 +5,73 @@
       <p>欢迎进入系统，可对学生、班级、成绩信息进行管理维护</p>
     </div>
 
-    <!-- 统计卡片 -->
     <div class="stat-row">
       <div class="stat-card">
-        <div class="stat-number">242</div>
+        <div class="stat-number">{{ studentAll }}</div>
         <div class="stat-text">学生总人数</div>
       </div>
       <div class="stat-card">
-        <div class="stat-number">14</div>
+        <div class="stat-number">{{ classAll }}</div>
         <div class="stat-text">班级总数</div>
       </div>
       <div class="stat-card">
-        <div class="stat-number">36</div>
+        <div class="stat-number">{{ todoCount }}</div>
         <div class="stat-text">待处理事项</div>
       </div>
     </div>
 
-    <!-- 快捷操作区域 -->
     <div class="quick-area">
       <h4>快捷操作</h4>
       <div class="btn-wrap">
-        <button class="operate-btn">新增学生</button>
+        <button class="operate-btn" @click="dialogVisible = true">新增学生</button>
         <button class="operate-btn">批量导入</button>
         <button class="operate-btn">导出报表</button>
       </div>
     </div>
   </div>
+
+  <!-- 复用弹窗组件 -->
+  <AddStudentDialog
+    :visible="dialogVisible"
+    @close="dialogVisible = false"
+    @submit="handleAddStudent"
+  />
 </template>
 
 <script setup lang="ts">
+import { ref, onMounted } from 'vue'
+import request from '@/api/request'
+import AddStudentDialog from '@/components/AddStudentDialog.vue'
+
+const studentAll = ref(0)
+const classAll = ref(0)
+const todoCount = ref(0)
+const dialogVisible = ref(false)
+
+// 新增学生提交
+async function handleAddStudent(form: any) {
+  console.log('首页提交新增学生', form)
+  // todo: axios.post('/api/student/add', form)
+  // 添加成功后，重新刷新首页统计 getStat()
+  await getStat()
+}
+
+async function getStat() {
+  const res = (await request.get('/api/home/stat')) as any
+  if (res?.code === 200) {
+    studentAll.value = res.data.studentAll
+    classAll.value = res.data.classAll
+    todoCount.value = res.data.todoCount
+  }
+}
+
+onMounted(() => {
+  getStat()
+})
 </script>
 
 <style scoped lang="less">
+/* 你的原有样式不变 */
 .home {
   height: 100%;
 }
@@ -63,7 +98,7 @@
     padding: 22px 12px;
     border-radius: 12px;
     text-align: center;
-    box-shadow: 0 1px 6px rgba(0,0,0,0.08);
+    box-shadow: 0 1px 6px rgba(0, 0, 0, 0.08);
 
     .stat-number {
       font-size: 30px;

@@ -62,6 +62,8 @@ import { ref } from 'vue'
 import axios from 'axios'
 import { useRouter } from 'vue-router'
 import { useAlertsStore } from '../../stores/user'
+import request from '@/api/request'
+
 const router = useRouter()
 const alertsStore = useAlertsStore()
 const password = ref('')
@@ -76,9 +78,17 @@ async function login() {
   }
   try {
     // 注意！后端地址如果没有/api，删掉前缀！
-    const response = await axios.post('http://localhost:9090/api/login', params)
+    const response = await request.post('/api/login', params)
+    // 修改前
+// const res = await axios.get('http://localhost:9090/api/home/stat')
+
+// // 修改后
+// const res = await axios.get('http://10.215.78.79:9090/api/home/stat')
+
+
     console.log(response.data)
     console.log('登录成功:', response.data)
+    alert('你妈了个逼！')
 
     // ✅ 登录成功，保存用户信息到 store
     if (response.data.msg === '操作成功') {
