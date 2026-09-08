@@ -85,18 +85,14 @@ async function login() {
 // // 修改后
 // const res = await axios.get('http://10.215.78.79:9090/api/home/stat')
 
-
-    console.log(response.data)
-    console.log('登录成功:', response.data)
-    alert('你妈了个逼！')
-
     // ✅ 登录成功，保存用户信息到 store
-    if (response.data.msg === '操作成功') {
+    if (response.msg === '操作成功') {
       alertsStore.setUserInfo(response.data)
       router.push('/index')
     }
     else {
       alert('登录失败，请检查用户名和密码是否正确')
+      console.log('登录失败:', params, response.msg)
     }
 
     // 成功后清空输入框

@@ -22,10 +22,9 @@
         <label>手机号</label>
         <input v-model="form.phone" type="text" />
       </div>
-
       <div class="dialog-buttons">
-        <button class="cancel-btn" @click="handleClose">取消</button>
-        <button class="confirm-btn" @click="handleSubmit">确定保存</button>
+        <button class="cancel-btn" type="button" @click="handleClose">取消</button>
+        <button class="confirm-btn" type="button" @click="handleSubmit" :disabled="submitting">确定保存</button>
       </div>
     </div>
   </div>
@@ -33,12 +32,10 @@
 
 <script setup lang="ts">
 import { ref } from 'vue'
-import request from '@/api/request'
 
 const props = defineProps<{
   visible: boolean
 }>()
-
 const emit = defineEmits<{
   close: []
   submit: [form: StudentForm]
@@ -60,6 +57,8 @@ const form = ref<StudentForm>({
   className: '',
   phone: ''
 })
+// 提交锁：防止重复点击
+const submitting = ref(false)
 
 // 关闭弹窗，清空表单
 const handleClose = () => {
@@ -73,36 +72,30 @@ const handleClose = () => {
   emit('close')
 }
 
-// 提交，把表单数据抛给父页面
-// async function handleSubmit() {
-//   const response = await request.post('/api/home/students', form.value)
-//     .then(() => {
-//       console.log('新增学生表单数据', form.value)
-//       console.log('新增学生成功')
-//       console.log('response', response)
-//       emit('submit', form.value)
-//       handleClose()
-
-//     })
-//     .catch((error) => {
-//       console.error('新增学生失败', error)
-//     })
-// }
 async function handleSubmit() {
-  try {
-    // await直接拿到返回结果
-    const response = await request.post('/api/home/students', form.value)
-    console.log('新增学生表单数据', form.value)
-    console.log('新增学生成功')
-    console.log('response', response)
+  if (submitting.value) return
+  // 前端手机号校验
+  const phoneReg = /^1\d{10}$/
+  if (!phoneReg.test(form.value.phone)) {
+    alert('手机号必须是1开头的11位数字')
+    return // ✅校验不通过直接终止，不再往下执行
+  }
 
-    emit('submit', form.value)
-    handleClose()
-  } catch (error) {
-    console.error('新增学生失败', error)
+  submitting.value = true
+  try {
+    // ✅删掉弹窗内部的request.post！！不要在这里发请求
+    emit('submit', form.value) // 仅把表单抛出给父页面，由父页面执行接口调用
+  } finally {
+    submitting.value = false
+  }
+  form.value = {
+    name: '',
+    stuNo: '',
+    gender: '',
+    className: '',
+    phone: ''
   }
 }
-
 </script>
 
 <style scoped lang="less">
@@ -157,6 +150,10 @@ async function handleSubmit() {
       border: none;
       border-radius: 6px;
       cursor: pointer;
+      &:disabled {
+        opacity: 0.65;
+        cursor: not-allowed;
+      }
     }
   }
 }

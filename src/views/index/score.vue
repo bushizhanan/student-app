@@ -33,7 +33,7 @@
           <td>88</td>
           <td>2026‑06‑20</td>
           <td>
-            <button class="edit-btn">编辑</button>
+            <button class="edit-btn" @click="openEditDialog(item)">编辑</button>
             <button class="del-btn">删除</button>
           </td>
         </tr>
@@ -49,7 +49,7 @@
             <button class="del-btn">删除</button>
           </td>
         </tr> -->
-        <tr v-for="item in scoreList" :key="item.studentId">
+        <tr v-for="item in scoreList" :key="item.id || item.studentId">
           <td>{{ item.studentId }}</td>
           <td>{{ item.name }}</td>
           <td>{{ item.className }}</td>
@@ -57,8 +57,8 @@
           <td>{{ item.score }}</td>
           <td>{{ item.examTime }}</td>
           <td>
-            <button class="edit-btn">编辑</button>
-            <button class="del-btn">删除</button>
+            <button class="edit-btn" @click="openEditDialog(item)">编辑</button>
+            <button class="del-btn" @click="score_delete(item.id)">删除</button>
           </td>
         </tr>
       </tbody>
@@ -67,7 +67,7 @@
     <!-- 录入成绩弹窗 学院‑专业联动 -->
     <div v-if="dialogVisible" class="dialog-mask" @click.self="dialogVisible = false">
       <div class="dialog-box">
-        <div class="dialog-title">录入成绩</div>
+        <div class="dialog-title">{{ isEditing ? '编辑成绩' : '录入成绩' }}</div>
         <div class="form-item">
           <label>学院</label>
           <select v-model="form.college" @change="onCollegeChange">
@@ -127,7 +127,7 @@
         </div>
         <div class="dialog-footer">
           <button class="cancel-btn" @click="dialogVisible = false">取消</button>
-          <button class="submit-btn" @click="submitForm">提交</button>
+          <button class="submit-btn" @click="submitForm">{{ isEditing ? '保存' : '提交' }}</button>
         </div>
       </div>
     </div>
@@ -135,9 +135,14 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { onMounted, ref } from 'vue'
+import request from '@/api/request'
+import axios from 'axios'
+
 
 const dialogVisible = ref(false)
+const isEditing = ref(false)
+
 
 //学院‑专业映射配置
 const majorMap: Record<string, string[]> = {
@@ -151,6 +156,7 @@ const majorOptions = ref<string[]>([])
 
 //表单，college 参数放在最前面
 const form = ref({
+  id: null as number | string | null,
   college: '',
   name: '',
   gender: '',
@@ -169,7 +175,9 @@ const onCollegeChange = () => {
 
 //打开弹窗重置表单
 const openAddDialog = () => {
+  isEditing.value = false
   form.value = {
+    id: null,
     college: '',
     name: '',
     gender: '',
@@ -180,6 +188,24 @@ const openAddDialog = () => {
     score: null
   }
   majorOptions.value = []
+  dialogVisible.value = true
+}
+
+// 打开编辑弹窗并回填当前成绩
+const openEditDialog = (item: any) => {
+  isEditing.value = true
+  form.value = {
+    id: item.id ?? null,
+    college: item.college ?? '',
+    name: item.name ?? '',
+    gender: item.gender ?? '',
+    studentId: item.studentId ?? '',
+    major: item.major ?? '',
+    className: item.className ?? '',
+    subject: item.subject ?? '',
+    score: item.score ?? null
+  }
+  majorOptions.value = majorMap[form.value.college] || []
   dialogVisible.value = true
 }
 
@@ -196,6 +222,23 @@ const submitForm = async () => {
   }
 
   try {
+    if (isEditing.value) {
+      if (data.id === null) {
+        alert('成绩ID不能为空')
+        return
+      }
+
+      const result = (await request.post('/api/score/update', data)) as any
+      if (result?.code === 200 && result?.data !== false) {
+        alert('编辑成功')
+        dialogVisible.value = false
+        await getScoreList()
+      } else {
+        alert(result?.msg || '编辑失败')
+      }
+      return
+    }
+
     const res = await fetch('/api/home/score', {
       method: 'POST',
       headers: {
@@ -207,7 +250,7 @@ const submitForm = async () => {
     if (res.ok) {
       alert('录入成功')
       dialogVisible.value = false
-      // todo 调用列表接口刷新表格
+      await getScoreList()
     } else {
       alert(result.msg || '录入失败')
     }
@@ -216,15 +259,59 @@ const submitForm = async () => {
     alert('网络请求异常')
   }
 }
+  const score_delete = async (id: number) => {
+  if (!window.confirm('确定删除该班级？')) return
+  try {
+    await axios.post(`http://localhost:9090/api/score/delete`, null, { params: { id } })
+    await getScoreList()
+    alert('删除成功')
+  } catch (err) {
+    console.error('删除失败', err)
+    alert('删除失败')
+  }
+}
 
 // 导出
 import * as XLSX from 'xlsx'
 
-// 成绩列表数据（实际项目里换成你的列表接口返回）
-const scoreList = ref([
-  { studentId: '2026001', name: '张三', className: '计算机1班', subject: 'Vue开发', score: 88, examTime: '2026-06-20' },
-  { studentId: '2026002', name: '李四', className: '计算机1班', subject: 'Vue开发', score: 92, examTime: '2026-06-20' }
-])
+const scoreList = ref<any[]>([])
+
+function normalizeScore(item: any) {
+  return {
+    ...item,
+    studentId: item.studentId ?? item.studentNum ?? item.studentNo ?? item.student?.studentNum,
+    name: item.name ?? item.studentName ?? item.student?.studentName,
+    subject: item.subject ?? item.courseName ?? item.subjectName ?? item.course?.courseName,
+    className: item.className ?? item.studentClass ?? item.class?.className,
+    examTime: item.examTime ?? item.testTime ?? item.createTime
+  }
+}
+
+// 获取成绩列表
+async function getScoreList() {
+  try {
+    const res = (await request.get('/api/score/list')) as any
+    console.log('获取成绩列表成功', res)
+
+    const list = Array.isArray(res)
+      ? res
+      : Array.isArray(res?.data)
+        ? res.data
+        : Array.isArray(res?.data?.list)
+          ? res.data.list
+          : Array.isArray(res?.data?.records)
+            ? res.data.records
+            : []
+
+    scoreList.value = list.map(normalizeScore)
+  } catch (err) {
+    console.error('获取成绩列表失败', err)
+  }
+}
+
+onMounted(() => {
+  getScoreList()
+})
 
 // 导出成绩Excel
 const exportExcel = () => {
@@ -247,6 +334,7 @@ const exportExcel = () => {
   // 触发下载，文件名带当天日期
   XLSX.writeFile(wb, `成绩表_${new Date().toISOString().slice(0, 10)}.xlsx`)
 }
+
 </script>
 
 <style scoped lang="less">
